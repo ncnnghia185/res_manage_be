@@ -1,0 +1,172 @@
+openapi: 3.0.0
+info:
+  title: Restaurant Manage System
+  version: 1.0.0
+servers:
+  - url: "http://localhost:9000/api"
+
+tags:
+  - Restaurant Owner APIs
+  - Restaurant Infor APIs
+  - Tables APIs
+  - Location APIs
+  - Menu APIs
+  - Category APIs
+  - Orders APIs
+  - Order Details APIs
+  - Purchase APIs
+  - Staff APIs
+  - Monthly Expenses APIs
+  - Statistical APIs 
+
+paths:
+  # RESTAURANT OWNER APIS
+
+  # Login
+  /owner/login-account:
+    post:
+      summary: Login restaurant owner account
+      description: Restaurant Owner login to system
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                password: 
+                  type: string
+              required:
+                - phone
+                - password
+
+      responses:
+        '200':
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message: 
+                    type: string
+                    example: Success
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      user:
+                        type: integer
+                        description: User's id      
+
+        '400':
+          description: Failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed
+                  error:
+                    type: string
+
+      tags:
+        - Restaurant Owner 
+  
+
+  # Get owner infor
+  /owner/infor/{uId}:
+    get:
+      summary: Get restaurant's owner information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerToken: []
+      responses:
+        '200':
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Owner's id
+                      username:
+                        type: string
+                        description: Owner's username
+                      email:
+                        type: string
+                        format: email
+                        description: Onwer's email
+                      fullname:
+                        type: string
+                        description: Owner's fullname
+                      phone:
+                        type: string
+                        description: Owner's phone number
+                      avatar: 
+                        type: string
+                        description: Owner's avatar
+
+        '400':
+          description: Failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: 
+                    type: string
+                    example: false
+                  message:
+                    type: string
+                    example: Failed
+                  error:
+                    type: string
+        '401':
+          description: Required Authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: 
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid Token or Required Authentication
+
+      tags:
+        - Restaurant Owner 
+
+
+
+  # MENU ITEMS APIS
+  
