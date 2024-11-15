@@ -7,7 +7,7 @@ router.post(
   verifyAccessToken,
   inforControllers.createNewRestaurantInfor
 );
-router.get("/restaurant-name/:id", inforControllers.listRestaurantNames);
+router.get("/all-restaurant-name/:id", inforControllers.listRestaurantNames);
 router.get("/restaurant-infor/:rId", inforControllers.selectOneRestaurantName);
 router.get(
   "/infor/:uid/:rid",

@@ -5,7 +5,7 @@ const generateAccessToken = (userId, phoneNumber) => {
     { id: userId, phone: phoneNumber },
     process.env.JWT_SECRET_KEY,
     {
-      expiresIn: "1d",
+      expiresIn: "3d",
     }
   );
 };

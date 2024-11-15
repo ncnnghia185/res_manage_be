@@ -15,13 +15,31 @@ const createNewTable = async (req, res) => {
 const getOneTableInfor = async (req, res) => {
   try {
     const { tId } = req.params;
-    const tableInfor = await tableServices.selectOneTable(tId);
+    const { owner_id, restaurant_id } = req.query;
+    const tableInfor = await tableServices.selectOneTable(
+      tId,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, tableInfor);
   } catch (error) {
     failResponse(res, error);
   }
 };
 
+// Get all table names
+const getAllTableWithoutFilter = async (req, res) => {
+  try {
+    const { owner_id, restaurant_id } = req.query;
+    const allTables = await tableServices.selectAllTableWithoutFilter(
+      owner_id,
+      restaurant_id
+    );
+    successResponse(res, allTables);
+  } catch (error) {
+    failResponse(res, error);
+  }
+};
 // Get all table infor with filter
 const getAllTableInfor = async (req, res) => {
   try {
@@ -47,7 +65,13 @@ const getOrderOfTable = async (req, res) => {
 const updateTableInfor = async (req, res) => {
   try {
     const { tId } = req.params;
-    const updatedTable = await tableServices.updateOneTable(tId, req.body);
+    const { owner_id, restaurant_id } = req.query;
+    const updatedTable = await tableServices.updateOneTable(
+      tId,
+      req.body,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, updatedTable);
   } catch (error) {
     failResponse(res, error);
@@ -69,7 +93,8 @@ const updateTableStatus = async (req, res) => {
 const deleteTable = async (req, res) => {
   try {
     const { tId } = req.params;
-    await tableServices.deleteOneTable(tId);
+    const { owner_id, restaurant_id } = req.query;
+    await tableServices.deleteOneTable(tId, owner_id, restaurant_id);
     successResponse(res);
   } catch (error) {
     failResponse(res, error);
@@ -78,6 +103,7 @@ const deleteTable = async (req, res) => {
 module.exports = {
   createNewTable,
   getOneTableInfor,
+  getAllTableWithoutFilter,
   getAllTableInfor,
   getOrderOfTable,
   updateTableInfor,

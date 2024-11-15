@@ -3,26 +3,8 @@ const categoryServices = require("./menuCategoryServices");
 const { cloudinary } = require("../../../config/cloudinaryConfig");
 // Create new category
 const createNewCategory = async (req, res) => {
-  const { name, description } = req.body;
-  let imageUrl = null;
-
   try {
-    // Check if an image file was uploaded
-    if (req.file) {
-      const imagePath = req.file.path;
-      const uploadResult = await cloudinary.uploader.upload(imagePath, {
-        folder: "category_images",
-      });
-      imageUrl = uploadResult.secure_url;
-    }
-
-    const categoryData = {
-      name,
-      image: imageUrl, // This will be `null` if no image was uploaded
-      description,
-    };
-
-    const newCategory = await categoryServices.insertNewCategory(categoryData);
+    const newCategory = await categoryServices.insertNewCategory(req.body);
     successResponse(res, newCategory);
   } catch (error) {
     failResponse(res, error);
@@ -42,8 +24,12 @@ const getCategoryInfor = async (req, res) => {
 
 // Select all categories name
 const getAllCategoriesName = async (req, res) => {
+  const { owner_id, restaurant_id } = req.query;
   try {
-    const allName = await categoryServices.selectAllCategories();
+    const allName = await categoryServices.selectAllCategories(
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, allName);
   } catch (error) {
     failResponse(res, error);
@@ -54,9 +40,12 @@ const getAllCategoriesName = async (req, res) => {
 const updateCategoryInfor = async (req, res) => {
   try {
     const { id } = req.params;
+    const { owner_id, restaurant_id } = req.query;
     const updatedCategory = await categoryServices.updateOneCategory(
       id,
-      req.body
+      req.body,
+      owner_id,
+      restaurant_id
     );
     successResponse(res, updatedCategory);
   } catch (error) {
@@ -68,7 +57,8 @@ const updateCategoryInfor = async (req, res) => {
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    await categoryServices.deleteOneCategory(id);
+    const { owner_id, restaurant_id } = req.query;
+    await categoryServices.deleteOneCategory(id, owner_id, restaurant_id);
     successResponse(res);
   } catch (error) {
     failResponse(res, error);

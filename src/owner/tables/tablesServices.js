@@ -7,35 +7,48 @@ const { getStatusVi } = require("../../../utils/utility");
 const insertNewTable = async (data) => {
   // validate input data
   const value = validateTables(data);
-  const status_Vi = getStatusVi(value.status);
   // insert into database
   const result = await client.query(
-    `INSERT INTO tables(name, type_en, type_vi, capacity, status, status_vi, location_id, restaurant_id) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    `INSERT INTO tables(name, type, capacity, status, location_id, restaurant_id, owner_id) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [
       value.name,
-      value.type_en,
-      value.type_vi,
+      value.type,
       value.capacity,
       value.status,
-      status_Vi,
-      value.location_id,
+      parseInt(value.location_id),
       value.restaurant_id,
+      value.owner_id,
     ]
   );
   return result.rows[0];
 };
 
 // SELECT ONE TABLE
-const selectOneTable = async (id) => {
+const selectOneTable = async (id, oId, rId) => {
   const condition = parseInt(id);
-  const result = await client.query(`SELECT * FROM tables WHERE id = $1`, [
-    condition,
-  ]);
+  const result = await client.query(
+    `SELECT t.*, l.name AS location_name 
+     FROM tables t JOIN locations l 
+     ON t.location_id = l.id 
+     WHERE t.id = $1 AND t.owner_id = $2 AND t.restaurant_id = $3`,
+    [condition, oId, rId]
+  );
   checkExist(result.rows);
   return result.rows[0];
 };
-
+// SELECT ALL TABLES
+const selectAllTableWithoutFilter = async (oId, rId) => {
+  const result = await client.query(
+    `SELECT t.id, t.name, t.status, t.location_id, l.name AS location_name
+     FROM tables t
+     JOIN locations l ON t.location_id = l.id
+     WHERE t.active = true AND t.owner_id = $1 AND t.restaurant_id = $2
+     ORDER BY t.id ASC`,
+    [oId, rId]
+  );
+  return result.rows;
+};
 // SELECT ALL TABLES WITH FILTER
 const selectAllTables = async (filter) => {
   const baseQuery = `SELECT * FROM tables WHERE active = true ORDER BY id ASC`;
@@ -98,9 +111,9 @@ const updateStatusTable = async (tableId) => {
 };
 
 // UPDATE ONE TABLE INFOR
-const updateOneTable = async (id, data) => {
+const updateOneTable = async (id, data, oId, rId) => {
   const baseQuery = `UPDATE tables SET `;
-  const sqlQuery = updateQuery(baseQuery, id, data);
+  const sqlQuery = updateQuery(baseQuery, id, data, oId, rId);
 
   const result = await client.query(sqlQuery.query, sqlQuery.values);
   return result.rows[0];
@@ -110,14 +123,18 @@ const updateOneTable = async (id, data) => {
 const changeTableLocation = async (tableId, newLocation) => {};
 
 // DELETE ONE TABLE
-const deleteOneTable = async (id) => {
+const deleteOneTable = async (id, oId, rId) => {
   const condition = parseInt(id);
-  await client.query(`DELETE FROM tables WHERE id = $1`, [condition]);
+  await client.query(
+    `DELETE FROM tables WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [condition, oId, rId]
+  );
 };
 
 module.exports = {
   insertNewTable,
   selectOneTable,
+  selectAllTableWithoutFilter,
   selectAllTables,
   selectOrderOfTable,
   updateOneTable,

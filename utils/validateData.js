@@ -24,26 +24,19 @@ const validateMenu = (data) => {
 // Validate tables data
 const tableEnTypes = ["regular", "vip"];
 const tableViTypes = ["Bàn thường", "Bàn VIP"];
-const tableStatus = ["available", "occupied", "reserved"];
+const tableStatus = ["available", "serving", "reserved"];
 const tableViStatus = ["Đang trống", "Đang có khách", "Đã được đặt trước"];
 const validateTables = (data) => {
   const schema = Joi.object().keys({
     name: Joi.string().required().max(50),
-    type_en: Joi.string()
-      .valid(...tableEnTypes)
-      .required(),
-    type_vi: Joi.string()
-      .valid(...tableViTypes)
-      .required(),
-    capacity: Joi.number().integer().valid(6, 10).required(),
+    type: Joi.string().required(),
+    capacity: Joi.string().required(),
     status: Joi.string()
       .valid(...tableStatus)
       .default("available"),
-    status_vi: Joi.string()
-      .valid(...tableViStatus)
-      .default("Đang trống"),
-    location_id: Joi.number().optional(),
+    location_id: Joi.number().required(),
     restaurant_id: Joi.number().required(),
+    owner_id: Joi.number().required(),
   });
   return validateData(schema, data);
 };
@@ -54,6 +47,7 @@ const validateLocation = (data) => {
     name: Joi.string().required(),
     description: Joi.string().optional(),
     restaurant_id: Joi.number(),
+    owner_id: Joi.number(),
   });
   return validateData(schema, data);
 };
@@ -88,8 +82,8 @@ const validateOrder = (data) => {
 const validateCategory = (data) => {
   const schema = Joi.object().keys({
     name: Joi.string().required(),
-    image: Joi.optional(),
-    description: Joi.optional(),
+    owner_id: Joi.number().required(),
+    restaurant_id: Joi.number().required(),
   });
   return validateData(schema, data);
 };

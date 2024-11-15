@@ -6,8 +6,8 @@ const { client } = require("../../../config/dbConfig");
 const insertNewLocation = async (data) => {
   const value = validateLocation(data);
   const result = await client.query(
-    `INSERT INTO locations(name, description, restaurant_id) VALUES ($1, $2, $3) RETURNING *`,
-    [value.name, value.description, value.restaurant_id]
+    `INSERT INTO locations(name, description, restaurant_id, owner_id) VALUES ($1, $2, $3, $4) RETURNING id, name, active`,
+    [value.name, value.description, value.restaurant_id, value.owner_id]
   );
   return result.rows[0];
 };
@@ -53,17 +53,18 @@ const selectAllLocations = async (oId, rId) => {
   const parseOId = parseInt(oId);
   const parseRId = parseInt(rId);
   const result = await client.query(
-    `SELECT id, name, description FROM locations WHERE active = true AND owner_id = $1 AND restaurant_id = $2 ORDER BY id ASC`,
+    `SELECT id, name, active FROM locations WHERE active = true AND owner_id = $1 AND restaurant_id = $2 ORDER BY id ASC`,
     [parseOId, parseRId]
   );
   return result.rows;
 };
 
 // UPDATE ONE LOCATION
-const updateOneLocation = async (id, data) => {
-  const baseQuery = `UPDATE locations SET `;
-  const sqlQuery = updateQuery(baseQuery, id, data);
-  const result = await client.query(sqlQuery.query, sqlQuery.values);
+const updateOneLocation = async (id, data, oId, rId) => {
+  const result = await client.query(
+    `UPDATE locations SET name = $1 WHERE id = $2 AND owner_id = $3 AND restaurant_id = $4`,
+    [data, id, oId, rId]
+  );
   return result.rows[0];
 };
 

@@ -6,7 +6,7 @@ const errorQuery = async (error) => {
 };
 
 // Update query
-const updateQuery = (baseQuery, id, data) => {
+const updateQuery = (baseQuery, id, data, ownerId, restaurantId) => {
   if (Object.keys(data).length === 0) {
     throw new Error("Please provide data to update this");
   }
@@ -27,7 +27,7 @@ const updateQuery = (baseQuery, id, data) => {
       index++;
     }
   }
-  query += ` WHERE id = $${index} RETURNING *`;
+  query += ` WHERE id = $${index} AND owner_id = ${ownerId} AND restaurant_id = ${restaurantId} RETURNING *`;
   // const values = Object.values(data);
 
   values.push(conditon);

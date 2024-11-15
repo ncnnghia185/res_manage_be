@@ -42,9 +42,12 @@ const getAllLocationInfor = async (req, res) => {
 const updateLocationInfor = async (req, res) => {
   try {
     const { id } = req.params;
+    const { owner_id, restaurant_id } = req.query;
     const updatedLocation = await locationServices.updateOneLocation(
       id,
-      req.body
+      req.body?.name,
+      owner_id,
+      restaurant_id
     );
     successResponse(res, updatedLocation);
   } catch (error) {

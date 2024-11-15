@@ -8,8 +8,8 @@ const insertNewMenu = async (data) => {
   const value = validateMenu(data);
   // insert into database
   const result = await client.query(
-    `INSERT INTO menu(name, price, description, image, category_id, restaurant_id)
-     VALUES ($1, $2, $3, $4, $5, $6) `,
+    `INSERT INTO menu(name, price, description, image, category_id, restaurant_id, owner_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       value.name,
       value.price,
@@ -17,6 +17,7 @@ const insertNewMenu = async (data) => {
       value.image || null,
       value.category_id,
       value.restaurant_id,
+      value.owner_id,
     ]
   );
 

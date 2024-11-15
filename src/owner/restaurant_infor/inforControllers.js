@@ -16,7 +16,7 @@ const createNewRestaurantInfor = async (req, res) => {
 const listRestaurantNames = async (req, res) => {
   try {
     const { id } = req.params;
-    const listNames = await inforServices.selectRestaurantName(id);
+    const listNames = await inforServices.selectAllRestaurantName(id);
     successResponse(res, listNames);
   } catch (error) {
     failResponse(res, error);
@@ -26,8 +26,9 @@ const listRestaurantNames = async (req, res) => {
 // Select one restaurant name
 const selectOneRestaurantName = async (req, res) => {
   const { rId } = req.params;
+  const { owner_id } = req.query;
   try {
-    const resName = await inforServices.selectOneRestaurantName(rId);
+    const resName = await inforServices.selectOneRestaurantName(rId, owner_id);
     successResponse(res, resName);
   } catch (error) {
     failResponse(res, error);

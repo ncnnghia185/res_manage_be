@@ -6,24 +6,19 @@ const { client } = require("../../../config/dbConfig");
 const insertNewCategory = async (data) => {
   const value = validateCategory(data);
   const result = await client.query(
-    `INSERT INTO categories(name, image, description, restaurant_id) 
-    VALUES ($1, $2, $3, $4) RETURNING *`,
-    [
-      value.name,
-      value.image || null,
-      value.description || null,
-      value.restaurant_id,
-    ]
+    `INSERT INTO categories(name,owner_id, restaurant_id) 
+    VALUES ($1, $2, $3) RETURNING id, name`,
+    [value.name, value.owner_id, value.restaurant_id]
   );
   return result.rows[0];
 };
 
 // SELECT ONE CATEGORY
-const selectOneCategory = async (id) => {
+const selectOneCategory = async (id, oId, rId) => {
   const condition = parseInt(id);
   const result = await client.query(
-    `SELECT name,image, description FROM categories WHERE id = $1`,
-    [condition]
+    `SELECT name,image, description FROM categories WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [condition, oId, rId]
   );
   checkExist(result.rows);
   const itemOfCategory = await client.query(
@@ -31,9 +26,9 @@ const selectOneCategory = async (id) => {
       SELECT m.id, m.name, m.price, m.description, m.image
       FROM menu m
       JOIN categories c ON m.category_id = c.id
-      WHERE c.id = $1
+      WHERE c.id = $1 
      `,
-    [condition]
+    [condition, oId, rId]
   );
 
   return {
@@ -43,26 +38,29 @@ const selectOneCategory = async (id) => {
 };
 
 // SELECT ALL CATEGORY
-const selectAllCategories = async () => {
+const selectAllCategories = async (oId, rId) => {
   const result = await client.query(
-    `SELECT id,name, image, description FROM categories`
+    `SELECT id, name FROM categories WHERE owner_id = $1 AND restaurant_id = $2 ORDER BY id ASC`,
+    [oId, rId]
   );
-  // checkExist(result.rows);
   return result.rows;
 };
 
 // UPDATE ONE CATEGORY
-const updateOneCategory = async (id, data) => {
+const updateOneCategory = async (id, data, oId, rId) => {
   const baseQuery = `UPDATE categories SET `;
-  const sqlQuery = updateQuery(baseQuery, id, data);
+  const sqlQuery = updateQuery(baseQuery, id, data, oId, rId);
   const result = await client.query(sqlQuery.query, sqlQuery.values);
   return result.rows[0];
 };
 
 // DELETE ONE CATEGORY
-const deleteOneCategory = async (id) => {
+const deleteOneCategory = async (id, oId, rId) => {
   const condition = parseInt(id);
-  await client.query(`DELETE FROM categories WHERE id = $1`, [condition]);
+  await client.query(
+    `DELETE FROM categories WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [condition, oId, rId]
+  );
 };
 
 module.exports = {

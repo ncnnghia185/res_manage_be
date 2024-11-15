@@ -20,7 +20,7 @@ const insertNewRestaurantInfor = async (data, ownerId) => {
   return result.rows[0];
 };
 // SELECT RESTAURANT NAME
-const selectRestaurantName = async (ownerId) => {
+const selectAllRestaurantName = async (ownerId) => {
   const condition = parseInt(ownerId);
   const result = await client.query(
     `SELECT id, name FROM restaurant_infor WHERE owner_id = $1 ORDER BY id ASC`,
@@ -31,11 +31,14 @@ const selectRestaurantName = async (ownerId) => {
 };
 
 // SELECT ONE RESTAURANT NAME
-const selectOneRestaurantName = async (resId) => {
+const selectOneRestaurantName = async (resId, ownId) => {
   const result = await client.query(
-    `SELECT name FROM restaurant_infor WHERE id = $1`,
-    [resId]
+    `SELECT * FROM restaurant_infor WHERE id = $1 AND owner_id = $2`,
+    [resId, ownId]
   );
+  if (result.rows[0].length === 0) {
+    return [];
+  }
   return result.rows[0];
 };
 // SELECT  RESTAURANT INFORMATION
@@ -67,7 +70,7 @@ const deleteOneRestaurant = async (id) => {
 };
 module.exports = {
   insertNewRestaurantInfor,
-  selectRestaurantName,
+  selectAllRestaurantName,
   selectRestaurantInfor,
   selectOneRestaurantName,
   updateOneRestaurant,
