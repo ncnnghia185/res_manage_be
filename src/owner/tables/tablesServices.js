@@ -50,16 +50,16 @@ const selectAllTableWithoutFilter = async (oId, rId) => {
   return result.rows;
 };
 // SELECT ALL TABLES WITH FILTER
-const selectAllTables = async (filter) => {
+const selectAllTables = async (filter, oId, rId) => {
   const baseQuery = `SELECT * FROM tables WHERE active = true ORDER BY id ASC`;
-  const sqlQuery = applyFilter(baseQuery, filter);
+  const sqlQuery = applyFilter(baseQuery, filter, oId, rId);
   const result = await client.query(sqlQuery);
   if (result.rows.length === 1) return result.rows[0];
   return result.rows;
 };
 
 // SELECT ORDER OF TABLE
-const selectOrderOfTable = async (tableId) => {
+const selectOrderOfTable = async (tableId, oId, rId) => {
   const result = await client.query(
     `
     SELECT  t.name as table_name, 
@@ -75,8 +75,8 @@ const selectOrderOfTable = async (tableId) => {
     FROM tables t 
     JOIN orders o ON t.id = o.table_id
     JOIN order_details odt ON o.id = odt.order_id
-    WHERE t.id = $1 AND t.status = 'occupied' `,
-    [tableId]
+    WHERE t.id = $1 AND t.status = 'occupied' AND owner_id = $2 AND restaurant_id = $3`,
+    [tableId, oId, rId]
   );
   const orderInfor = {
     table_name: result.rows[0].table_name,
@@ -101,11 +101,11 @@ const selectOrderOfTable = async (tableId) => {
 };
 
 // UPDATE TABLE STATUS AFTER ORDER SUCCESS
-const updateStatusTable = async (tableId) => {
+const updateStatusTable = async (tableId, oId, rId) => {
   const table_id = parseInt(tableId);
   const result = await client.query(
-    `UPDATE tables SET status = 'occupied', status_vi='Đang có khách' WHERE id = $1 RETURNING *`,
-    [table_id]
+    `UPDATE tables SET status = 'serving' WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3 RETURNING *`,
+    [table_id, oId, rId]
   );
   return result.rows[0];
 };

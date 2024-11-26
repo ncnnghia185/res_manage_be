@@ -2,10 +2,21 @@ const { successResponse, failResponse } = require("../../../utils/apiResponse");
 const { client } = require("../../../config/dbConfig");
 const { generateAccessToken } = require("../../../middlewares/generateToken");
 const { comparePassword } = require("../../../utils/utility");
-const crypto = require("crypto");
 const ownerServices = require("./ownerServices");
 
 const registerOwnerAccout = async (req, res) => {
+  // check email
+  const existEmail = await client.query(
+    `SELECT email FROM restaurant_owner WHERE email = $1`,
+    [req.body.email]
+  );
+  if (existEmail.rows.length > 0) {
+    return res.status(400).json({
+      errCode: 1,
+      success: false,
+      message: "Email existed",
+    });
+  }
   try {
     const newAccout = await ownerServices.insertNewOwnerAccount(req.body);
     successResponse(res, newAccout);
