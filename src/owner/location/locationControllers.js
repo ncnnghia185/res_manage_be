@@ -58,7 +58,8 @@ const updateLocationInfor = async (req, res) => {
 const deleteLocation = async (req, res) => {
   try {
     const { id } = req.params;
-    await locationServices.deleteOneLocation(id);
+    const { owner_id, restaurant_id } = req.query;
+    await locationServices.deleteOneLocation(id, owner_id, restaurant_id);
     successResponse(res);
   } catch (error) {
     failResponse(res, error);

@@ -11,12 +11,15 @@ const validateData = (schema, data) => {
 // Validate Menu Data
 const validateMenu = (data) => {
   const schema = Joi.object().keys({
+    id: Joi.string().required(),
     name: Joi.string().required(),
     price: Joi.number().required(),
     description: Joi.string().optional().allow(""),
-    image: Joi.string().optional().allow(""),
+    image: Joi.string(),
     category_id: Joi.number().required(),
+    original_price: Joi.string(),
     restaurant_id: Joi.number().required(),
+    owner_id: Joi.number().required(),
   });
   return validateData(schema, data);
 };
@@ -45,7 +48,6 @@ const validateTables = (data) => {
 const validateLocation = (data) => {
   const schema = Joi.object().keys({
     name: Joi.string().required(),
-    description: Joi.string().optional(),
     restaurant_id: Joi.number(),
     owner_id: Joi.number(),
   });
@@ -91,12 +93,10 @@ const validateCategory = (data) => {
 // Validate restaurant owner data
 const validateRestaurantOwner = (data) => {
   const schema = Joi.object().keys({
-    username: Joi.string().required(),
-    password: Joi.string().required().min(8),
     email: Joi.string().email().required(),
+    fullname: Joi.string().required(),
+    password: Joi.string().required().min(8),
     phone: Joi.string().required(),
-    fullname: Joi.string(),
-    avatar: Joi.string(),
   });
   return validateData(schema, data);
 };
@@ -180,6 +180,23 @@ const validateStaffPayrollAndTimeSheet = (data) => {
   });
   return validateData(schema, data);
 };
+
+// Validate ingredient for menu items
+const validateIngredientOfMenuItem = (data) => {
+  const schema = Joi.object().keys({
+    ingredient_name: Joi.string(),
+    quantity: Joi.number(),
+    ingredient_unit: Joi.string(),
+    cost_per_unit: Joi.number(),
+  });
+  return validateData(schema, data);
+};
+const ingredientSchema = Joi.object({
+  ingredient_name: Joi.string(),
+  quantity: Joi.number(),
+  ingredient_unit: Joi.string(),
+  cost_per_unit: Joi.number(),
+});
 module.exports = {
   validateMenu,
   validateTables,
@@ -193,4 +210,5 @@ module.exports = {
   validateMonthlyExpenses,
   validateStaff,
   validateStaffPayrollAndTimeSheet,
+  validateIngredientOfMenuItem,
 };

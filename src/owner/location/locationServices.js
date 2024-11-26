@@ -6,7 +6,7 @@ const { client } = require("../../../config/dbConfig");
 const insertNewLocation = async (data) => {
   const value = validateLocation(data);
   const result = await client.query(
-    `INSERT INTO locations(name, description, restaurant_id, owner_id) VALUES ($1, $2, $3, $4) RETURNING id, name, active`,
+    `INSERT INTO locations(name, restaurant_id, owner_id) VALUES ($1, $2, $3) RETURNING id, name, active`,
     [value.name, value.description, value.restaurant_id, value.owner_id]
   );
   return result.rows[0];
@@ -33,17 +33,8 @@ const selectOneLocation = async (id, oId, rId) => {
     GROUP BY l.name`,
     [condition, parseOId, parseRId]
   );
-  // get all tables in this location
-  const tablesInLocation = await client.query(
-    ` SELECT t.id, t.name, t.type_vi,t,type_en, t.capacity, t.status, t.status_vi 
-      FROM tables t 
-      JOIN locations l ON t.location_id = l.id 
-      WHERE l.id = $1 AND l.owner_id = $2 AND l.restaurant_id = $3 AND t.active = true`,
-    [condition, parseOId, parseRId]
-  );
   return {
     locationInfor: result.rows[0],
-    tablesInLocation: tablesInLocation.rows,
     count: tableInLocation.rows[0]?.table_count,
   };
 };
@@ -69,9 +60,12 @@ const updateOneLocation = async (id, data, oId, rId) => {
 };
 
 // DELETE ONE LOCATION
-const deleteOneLocation = async (id) => {
+const deleteOneLocation = async (id, oId, rId) => {
   const condition = parseInt(id);
-  await client.query(`DELETE FROM locations WHERE id = $1`, [condition]);
+  await client.query(
+    `DELETE FROM locations WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [condition, oId, rId]
+  );
 };
 
 module.exports = {

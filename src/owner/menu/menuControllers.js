@@ -3,19 +3,34 @@ const menuServices = require("./menuServices");
 const { cloudinary } = require("../../../config/cloudinaryConfig");
 // Create new menu item
 const createMenuItem = async (req, res) => {
-  const { name, price, description, category_id, restaurant_id } = req.body;
-  const imagePath = req.file.path;
+  const {
+    id,
+    name,
+    price,
+    description,
+    category_id,
+    restaurant_id,
+    owner_id,
+    original_price,
+  } = req.body;
+  let imageUrl = "";
   try {
-    const uploadResult = await cloudinary.uploader.upload(imagePath);
-    const imageUrl = uploadResult.secure_url;
+    if (req.file && req.file.path && req.file.path !== "") {
+      const imagePath = req.file.path;
+      const uploadResult = await cloudinary.uploader.upload(imagePath);
+      imageUrl = uploadResult.secure_url;
+    }
 
     const itemData = {
+      id,
       name,
       price,
       description,
       image: imageUrl,
       category_id,
       restaurant_id,
+      owner_id,
+      original_price,
     };
     const menuItem = await menuServices.insertNewMenu(itemData);
     successResponse(res, menuItem);
@@ -28,7 +43,12 @@ const createMenuItem = async (req, res) => {
 const getOneMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const menuItem = await menuServices.selectOneMenu(id);
+    const { owner_id, restaurant_id } = req.query;
+    const menuItem = await menuServices.selectOneMenu(
+      id,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, menuItem);
   } catch (error) {
     failResponse(res, error);
@@ -37,8 +57,9 @@ const getOneMenuItem = async (req, res) => {
 
 // Get all menu items
 const getAllMenuItems = async (req, res) => {
+  const { owner_id, restaurant_id } = req.query;
   try {
-    const menuItems = await menuServices.selectAllMenu();
+    const menuItems = await menuServices.selectAllMenu(owner_id, restaurant_id);
     successResponse(res, menuItems);
   } catch (error) {
     failResponse(res, error);
@@ -71,7 +92,8 @@ const updateMenuItem = async (req, res) => {
 const deleteMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
-    await menuServices.deleteMenu(id);
+    const { owner_id, restaurant_id } = req.query;
+    await menuServices.deleteMenu(id, owner_id, restaurant_id);
     successResponse(res);
   } catch (error) {
     failResponse(res, error);

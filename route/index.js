@@ -13,7 +13,7 @@ const staffRoutes = require("../src/owner/staff/staffRoutes");
 const statisticRoutes = require("../src/owner/statistical/statisRoutes");
 const paymentRoutes = require("../src/owner/payment/paymentRoutes");
 const shiftfundRoutes = require("../src/owner/shift_fund/shiftfundRoutes");
-
+const menuIngredientRoutes = require("../src/owner/menu_ingredient/menuIngredientRoutes");
 const initWebroute = (app) => {
   app.use("/api/menu", menuRoutes);
   app.use("/api/tables", tablesRoutes);
@@ -29,6 +29,7 @@ const initWebroute = (app) => {
   app.use("/api/statistic", statisticRoutes);
   app.use("/api/payment", paymentRoutes);
   app.use("/api/shift-fund", shiftfundRoutes);
+  app.use("/api/menu-ingredient", menuIngredientRoutes);
 };
 
 module.exports = initWebroute;

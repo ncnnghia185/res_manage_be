@@ -9,18 +9,11 @@ const insertNewOwnerAccount = async (data) => {
   const value = validateRestaurantOwner(data);
   const password = await hashPassword(value.password);
   const result = await client.query(
-    `INSERT INTO restaurant_owner(username,email,password,fullname,phone,avatar) 
-    VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [
-      value.username,
-      value.email,
-      password,
-      value.fullname || null,
-      value.phone,
-      value.avatar || null,
-    ]
+    `INSERT INTO restaurant_owner(email, fullname, password, phone) 
+    VALUES ($1,$2,$3,$4) RETURNING *`,
+    [value.email, value.fullname, password, value.phone]
   );
-  return result.rows[0];
+  return true;
 };
 
 // Save refresh token to cookie

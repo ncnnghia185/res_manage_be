@@ -15,7 +15,12 @@ const createNewCategory = async (req, res) => {
 const getCategoryInfor = async (req, res) => {
   try {
     const { id } = req.params;
-    const categoryInfor = await categoryServices.selectOneCategory(id);
+    const { owner_id, restaurant_id } = req.query;
+    const categoryInfor = await categoryServices.selectMenuItemsCategory(
+      id,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, categoryInfor);
   } catch (error) {
     failResponse(res, error);

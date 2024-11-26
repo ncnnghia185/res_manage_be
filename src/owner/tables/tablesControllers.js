@@ -43,7 +43,12 @@ const getAllTableWithoutFilter = async (req, res) => {
 // Get all table infor with filter
 const getAllTableInfor = async (req, res) => {
   try {
-    const allTables = await tableServices.selectAllTables(req.body);
+    const { owner_id, restaurant_id } = req.query;
+    const allTables = await tableServices.selectAllTables(
+      req.body,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, allTables);
   } catch (error) {
     failResponse(res, error);

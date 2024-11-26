@@ -6,7 +6,7 @@ const { client } = require("../../../config/dbConfig");
 const insertNewCategory = async (data) => {
   const value = validateCategory(data);
   const result = await client.query(
-    `INSERT INTO categories(name,owner_id, restaurant_id) 
+    `INSERT INTO categories(name, owner_id, restaurant_id) 
     VALUES ($1, $2, $3) RETURNING id, name`,
     [value.name, value.owner_id, value.restaurant_id]
   );
@@ -14,27 +14,21 @@ const insertNewCategory = async (data) => {
 };
 
 // SELECT ONE CATEGORY
-const selectOneCategory = async (id, oId, rId) => {
+const selectMenuItemsCategory = async (id, oId, rId) => {
   const condition = parseInt(id);
-  const result = await client.query(
-    `SELECT name,image, description FROM categories WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
-    [condition, oId, rId]
-  );
-  checkExist(result.rows);
-  const itemOfCategory = await client.query(
+
+  const countItemsOfCategory = await client.query(
     `
-      SELECT m.id, m.name, m.price, m.description, m.image
-      FROM menu m
+      SELECT COUNT(*) as total_items
+      FROM menu_item AS m
       JOIN categories c ON m.category_id = c.id
-      WHERE c.id = $1 
+      WHERE c.id = $1 AND c.owner_id = $2 AND c.restaurant_id = $3
      `,
     [condition, oId, rId]
   );
+  const count = parseInt(countItemsOfCategory.rows[0].total_items);
 
-  return {
-    categoryInfor: result.rows[0],
-    itemsCategory: itemOfCategory.rows,
-  };
+  return count;
 };
 
 // SELECT ALL CATEGORY
@@ -65,7 +59,7 @@ const deleteOneCategory = async (id, oId, rId) => {
 
 module.exports = {
   insertNewCategory,
-  selectOneCategory,
+  selectMenuItemsCategory,
   selectAllCategories,
   updateOneCategory,
   deleteOneCategory,

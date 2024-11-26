@@ -40,7 +40,7 @@ const formatMonthSalary = (monthStr) => {
   }
 };
 // FILTER
-const applyFilter = (baseQuery, filter) => {
+const applyFilter = (baseQuery, filter, owner_id, restaurant_id) => {
   // Check have filter
   if (!filter || Object.keys(filter).length === 0) {
     return baseQuery;
@@ -51,7 +51,7 @@ const applyFilter = (baseQuery, filter) => {
   const filterKeys = Object.keys(filter);
   const numFilters = filterKeys.length;
   let filterCount = 0;
-  query += " WHERE ";
+  query += ` WHERE owner_id = ${owner_id} AND restaurant_id = ${restaurant_id}`;
 
   filterKeys.forEach((key) => {
     query += ` ${key} = '${filter[key]}'`;
@@ -70,19 +70,6 @@ const sortResult = () => {};
 // PAGINATION
 const paginationData = () => {};
 
-// STATUS_VI FOR TABLE
-const getStatusVi = (status) => {
-  switch (status) {
-    case "available":
-      return "Đang trống";
-    case "occupied":
-      return "Đang có khách";
-    case "reserved":
-      return "Đã được đặt trước";
-    default:
-      break;
-  }
-};
 module.exports = {
   applyFilter,
   sortResult,
@@ -91,5 +78,4 @@ module.exports = {
   comparePassword,
   formatDate,
   formatMonthSalary,
-  getStatusVi,
 };
