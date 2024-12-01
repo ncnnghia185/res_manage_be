@@ -7,7 +7,7 @@ const insertNewLocation = async (data) => {
   const value = validateLocation(data);
   const result = await client.query(
     `INSERT INTO locations(name, restaurant_id, owner_id) VALUES ($1, $2, $3) RETURNING id, name, active`,
-    [value.name, value.description, value.restaurant_id, value.owner_id]
+    [value.name, value.restaurant_id, value.owner_id]
   );
   return result.rows[0];
 };
@@ -17,26 +17,19 @@ const selectOneLocation = async (id, oId, rId) => {
   const condition = parseInt(id);
   const parseOId = parseInt(oId);
   const parseRId = parseInt(rId);
-  // location infor
-  const result = await client.query(
-    `SELECT * FROM locations WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
-    [condition, parseOId, parseRId]
-  );
-  checkExist(result.rows);
 
   // count number tables in this location
   const tableInLocation = await client.query(
-    `SELECT l.name, COUNT(t.*) AS table_count
+    `SELECT COUNT(t.*) AS table_count
     FROM locations l
     JOIN tables t ON l.id = t.location_id 
     WHERE l.id = $1  AND l.owner_id = $2 AND l.restaurant_id = $3
-    GROUP BY l.name`,
+    `,
     [condition, parseOId, parseRId]
   );
-  return {
-    locationInfor: result.rows[0],
-    count: tableInLocation.rows[0]?.table_count,
-  };
+
+  const count = tableInLocation.rows[0]?.table_count;
+  return count;
 };
 
 // SELECT ALL LOCATIONS
