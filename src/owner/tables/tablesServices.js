@@ -10,7 +10,7 @@ const insertNewTable = async (data) => {
   // insert into database
   const result = await client.query(
     `INSERT INTO tables(name, type, capacity, status, location_id, restaurant_id, owner_id) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       value.name,
       value.type,
@@ -21,7 +21,7 @@ const insertNewTable = async (data) => {
       value.owner_id,
     ]
   );
-  return result.rows[0];
+  return true;
 };
 
 // SELECT ONE TABLE
@@ -40,10 +40,10 @@ const selectOneTable = async (id, oId, rId) => {
 // SELECT ALL TABLES
 const selectAllTableWithoutFilter = async (oId, rId) => {
   const result = await client.query(
-    `SELECT t.id, t.name, t.status, t.location_id, l.name AS location_name
+    `SELECT t.id, t.name, t.status, t.location_id, t.type, l.name AS location_name
      FROM tables t
      JOIN locations l ON t.location_id = l.id
-     WHERE t.active = true AND t.owner_id = $1 AND t.restaurant_id = $2
+     WHERE t.owner_id = $1 AND t.restaurant_id = $2
      ORDER BY t.id ASC`,
     [oId, rId]
   );

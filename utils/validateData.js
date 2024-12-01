@@ -197,6 +197,20 @@ const ingredientSchema = Joi.object({
   ingredient_unit: Joi.string(),
   cost_per_unit: Joi.number(),
 });
+
+// validate shift fund
+const validateShiftFund = (data) => {
+  const schema = Joi.object().keys({
+    id: Joi.string().required(),
+    shift_date: Joi.string().required(),
+    open_time: Joi.string().required(),
+    open_cash: Joi.string().required(),
+    notes: Joi.string().optional().allow(""),
+    owner_id: Joi.number().required(),
+    restaurant_id: Joi.number().required(),
+  });
+  return validateData(schema, data);
+};
 module.exports = {
   validateMenu,
   validateTables,
@@ -211,4 +225,5 @@ module.exports = {
   validateStaff,
   validateStaffPayrollAndTimeSheet,
   validateIngredientOfMenuItem,
+  validateShiftFund,
 };
