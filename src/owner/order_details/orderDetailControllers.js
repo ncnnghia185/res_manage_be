@@ -4,12 +4,14 @@ const orderDetailServices = require("./orderDetailServices");
 // Create new order details
 const createNewOrderDetails = async (req, res) => {
   try {
-    const { oId } = req.params;
-    const { tId } = req.params;
+    const { oId, tId } = req.params;
+    const { owner_id, restaurant_id, data } = req.body;
     const newOrderDetails = await orderDetailServices.insertNewOrderDetails(
       oId,
       tId,
-      req.body
+      owner_id,
+      restaurant_id,
+      data
     );
     successResponse(res, newOrderDetails);
   } catch (error) {

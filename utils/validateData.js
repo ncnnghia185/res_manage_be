@@ -55,26 +55,30 @@ const validateLocation = (data) => {
 };
 
 // Validate order_details data
-const validateOrderDetails = (data) => {
-  const schema = Joi.object().keys({
-    table_id: Joi.number().required(),
-    order_id: Joi.number(),
-    item_id: Joi.number(),
-    item_name: Joi.string().required(),
-    item_quantity: Joi.string().required(),
-    item_price: Joi.number(),
-    total_item_price: Joi.number(),
-  });
-  return validateData(schema, data);
-};
+// const validateOrderDetails = (data) => {
+//   const schema = Joi.object().keys({
+//     table_id: Joi.number().required(),
+//     order_id: Joi.number(),
+//     item_id: Joi.number(),
+//     item_name: Joi.string().required(),
+//     item_quantity: Joi.string().required(),
+//     item_price: Joi.number(),
+//     total_item_price: Joi.number(),
+//   });
+//   return validateData(schema, data);
+// };
 
 // Validate orders data
 const validateOrder = (data) => {
   const schema = Joi.object().keys({
+    id: Joi.string().required(),
     table_id: Joi.number().required(),
-    order_date: Joi.string().required(),
+    order_time: Joi.string().required(),
     customer_name: Joi.string().required(),
-    number_customers: Joi.number().required(),
+    number_of_customer: Joi.number().required(),
+    notes: Joi.string().optional().allow(""),
+    order_status: Joi.string(),
+    owner_id: Joi.number(),
     restaurant_id: Joi.number(),
   });
   return validateData(schema, data);
@@ -215,7 +219,7 @@ module.exports = {
   validateMenu,
   validateTables,
   validateLocation,
-  validateOrderDetails,
+  // validateOrderDetails,
   validateOrder,
   validateCategory,
   validateRestaurantOwner,

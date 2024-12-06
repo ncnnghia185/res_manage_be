@@ -87,7 +87,12 @@ const updateTableInfor = async (req, res) => {
 const updateTableStatus = async (req, res) => {
   try {
     const { tId } = req.params;
-    const updateStatus = await tableServices.updateStatusTable(tId);
+    const { owner_id, restaurant_id } = req.query;
+    const updateStatus = await tableServices.updateStatusTable(
+      tId,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, updateStatus);
   } catch (error) {
     failResponse(res, error);

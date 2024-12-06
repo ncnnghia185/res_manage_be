@@ -3,41 +3,35 @@ const { validateOrderDetails } = require("../../../utils/validateData");
 const { checkExist, updateQuery } = require("../../../utils/handleQuery");
 
 // INSERT NEW ORDER DETAILS
-const insertNewOrderDetails = async (orderId, tableId, data) => {
-  const order_id = parseInt(orderId);
+const insertNewOrderDetails = async (
+  orderId,
+  tableId,
+  ownerId,
+  restaurantId,
+  data
+) => {
   const table_id = parseInt(tableId);
   const order_details = data;
   const insertedOrderDetails = [];
   //Transaction to insert into 'order_details' table
   await client.query(`BEGIN`);
   for (const detail of order_details) {
-    const { name, id, price, quantity, restaurant_id, total_item_price } =
+    const { item_id, item_name, item_quantity, item_price, total_item_price } =
       detail;
-    // Get the id of item from menu table
-    // const item = await client.query(
-    //   `SELECT id,price FROM menu WHERE name = $1`,
-    //   [detail.item_name]
-    // );
-    // checkExist(item.rows);
-    // const item_id = item.rows[0].id;
-    // const item_price = item.rows[0].price;
-
-    // // Calculate the item total price
-    // let item_total_price = item_price * detail.item_quantity;
-
     // Insert into order_details table
     const text = `
-      INSERT INTO order_details(table_id, order_id, item_name, item_quantity, item_price, total_item_price, item_id, restaurant_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
+      INSERT INTO order_details(order_id, table_id, item_id, item_name, item_quantity, item_price, total_item_price, owner_id, restaurant_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`;
     const values = [
+      orderId,
       table_id,
-      order_id,
-      name,
-      quantity,
-      price,
+      item_id,
+      item_name,
+      item_quantity,
+      item_price,
       total_item_price,
-      id,
-      restaurant_id,
+      ownerId,
+      restaurantId,
     ];
 
     const result = await client.query(text, values);
@@ -51,32 +45,36 @@ const insertNewOrderDetails = async (orderId, tableId, data) => {
 
   // Calculate total amount of current item in order
   const totalAmountOfCurrentItems = insertedOrderDetails.reduce(
-    (accumulator, item) => accumulator + item.total_item_price,
+    (accumulator, item) => accumulator + Number(item.total_item_price),
     0
   );
 
   // Get total amount in database
   const totalAmountQuery = await client.query(
-    `SELECT total_amount FROM orders WHERE id = $1`,
-    [order_id]
+    `SELECT total_amount FROM orders WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [orderId, ownerId, restaurantId]
   );
 
-  let totalAmountOfOrder = totalAmountOfCurrentItems;
+  let totalAmountOfOrder = Number(totalAmountOfCurrentItems);
   if (totalAmountQuery.rows.length > 0) {
-    const totalAmountOfExistItems = totalAmountQuery.rows[0].total_amount || 0;
+    const totalAmountOfExistItems =
+      Number(totalAmountQuery.rows[0].total_amount) || 0;
     totalAmountOfOrder += totalAmountOfExistItems;
   }
 
-  // Update status to 'pending payment' and total_amount in 'orders' table
+  // Update status to 'pending' and total_amount in 'orders' table
   await client.query(
     `UPDATE orders
-      SET status_en = 'pending payment', 
-          status_vi ='Chờ thanh toán',
+      SET status_payment = 'pending', order_status = 'serving',
           total_amount = $1
-      WHERE id = $2`,
-    [totalAmountOfOrder, order_id]
+      WHERE id = $2 AND owner_id = $3 AND restaurant_id = $4`,
+    [totalAmountOfOrder, orderId, ownerId, restaurantId]
   );
 
+  await client.query(
+    `UPDATE tables SET status = 'serving' WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3 `,
+    [table_id, ownerId, restaurantId]
+  );
   await client.query("COMMIT");
 
   return insertedOrderDetails;
