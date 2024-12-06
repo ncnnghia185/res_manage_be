@@ -38,9 +38,9 @@ const selectOneRestaurantName = async (req, res) => {
 // Select restaurant information
 const selectRestaurantInfor = async (req, res) => {
   try {
-    const { uid } = req.params;
     const { rid } = req.params;
-    const resInfor = await inforServices.selectRestaurantInfor(uid, rid);
+    const { owner_id } = req.query;
+    const resInfor = await inforServices.selectRestaurantInfor(rid, owner_id);
     successResponse(res, resInfor);
   } catch (error) {
     failResponse(res, error);

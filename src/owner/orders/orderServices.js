@@ -7,30 +7,36 @@ const { applyFilter } = require("../../../utils/utility");
 const insertNewOrder = async (data) => {
   const value = validateOrder(data);
 
+  await client.query("BEGIN");
   const result = await client.query(
-    `INSERT INTO orders(table_id, order_date, customer_name, number_customers, restaurant_id) 
-    VALUES ($1, $2, $3, $4, $5) RETURNING id, table_id`,
+    `INSERT INTO orders(id, table_id, order_time, customer_name, number_of_customer, order_status, notes, owner_id, restaurant_id) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, table_id`,
     [
+      value.id,
       value.table_id,
-      value.order_date,
+      value.order_time,
       value.customer_name,
-      value.number_customers,
+      value.number_of_customer,
+      value.order_status,
+      value.notes || null,
+      value.owner_id,
       value.restaurant_id,
     ]
   );
+
+  await client.query("COMMIT");
   const order_id = result.rows[0].id;
   const table_id = result.rows[0].table_id;
   return { orderId: order_id, tableId: table_id };
 };
 
 // SELECT ONE ORDER INFOR
-const selectOneOrderInfor = async (orderId) => {
-  const condition = parseInt(orderId);
+const selectOneOrderInfor = async (orderId, oId, rId) => {
   const result = await client.query(
     `
-  SELECT id, table_id, order_date,total_amount, status, payment_status, customer_name, number_customers
-  FROM orders WHERE id = $1`,
-    [condition]
+  SELECT id, table_id, order_time, total_amount, order_status, notes, status_payment, customer_name, number_of_customer
+  FROM orders WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [orderId, oId, rId]
   );
 
   return result.rows[0];
@@ -46,6 +52,18 @@ const selectAllOrdersInfor = async (filter) => {
   return result.rows;
 };
 
+// SELECT SERVING ORDER OF TABLE
+const selectServingOrderOfTable = async (table_id, oId, rId) => {
+  const result = await client.query(
+    `SELECT * FROM orders 
+     WHERE table_id = $1 AND order_status = 'serving' 
+     AND owner_id = $2 AND restaurant_id = $3 
+     ORDER BY order_time DESC 
+     LIMIT 1`,
+    [table_id, oId, rId]
+  );
+  return result.rows[0];
+};
 // UPDATE ORDER PAYMENT_STATUS
 const updateOneOrderPaymentStatus = async (oId, pStatus) => {
   const order_id = parseInt(oId);
@@ -72,4 +90,5 @@ module.exports = {
   selectAllOrdersInfor,
   deleteOneOrderInfor,
   updateOneOrderPaymentStatus,
+  selectServingOrderOfTable,
 };

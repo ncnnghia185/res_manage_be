@@ -36,21 +36,18 @@ const selectOneRestaurantName = async (resId, ownId) => {
     `SELECT * FROM restaurant_infor WHERE id = $1 AND owner_id = $2`,
     [resId, ownId]
   );
-  if (result.rows[0].length === 0) {
-    return [];
-  }
   return result.rows[0];
 };
 // SELECT  RESTAURANT INFORMATION
-const selectRestaurantInfor = async (userId, resId) => {
+const selectRestaurantInfor = async (resId, userId) => {
   const condition = parseInt(userId);
   const conditionRes = parseInt(resId);
   const result = await client.query(
-    `SELECT i.*,o.username,o.phone,o.avatar 
+    `SELECT i.*,o.fullname,o.phone 
     FROM restaurant_infor i 
     JOIN restaurant_owner o ON i.owner_id = o.id
      WHERE o.id = $1 AND i.id = $2`,
-    [condition, conditionRes]
+    [userId, resId]
   );
   return result.rows[0];
 };

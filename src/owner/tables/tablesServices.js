@@ -103,11 +103,11 @@ const selectOrderOfTable = async (tableId, oId, rId) => {
 // UPDATE TABLE STATUS AFTER ORDER SUCCESS
 const updateStatusTable = async (tableId, oId, rId) => {
   const table_id = parseInt(tableId);
-  const result = await client.query(
-    `UPDATE tables SET status = 'serving' WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3 RETURNING *`,
+  await client.query(
+    `UPDATE tables SET status = 'serving' WHERE id = $1 AND owner_id = $2 AND restaurant_id = $3 `,
     [table_id, oId, rId]
   );
-  return result.rows[0];
+  return true;
 };
 
 // UPDATE ONE TABLE INFOR

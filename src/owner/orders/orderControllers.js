@@ -15,7 +15,12 @@ const createNewOrder = async (req, res) => {
 const getOrderInfor = async (req, res) => {
   try {
     const { id } = req.params;
-    const orderInfor = await orderServices.selectOneOrderInfor(id);
+    const { owner_id, restaurant_id } = req.query;
+    const orderInfor = await orderServices.selectOneOrderInfor(
+      id,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, orderInfor);
   } catch (error) {
     failResponse(res, error);
@@ -32,6 +37,21 @@ const getAllOrderInfor = async (req, res) => {
   }
 };
 
+// Get serving order of table
+const getServingOrderOfTable = async (req, res) => {
+  try {
+    const { tId } = req.params;
+    const { owner_id, restaurant_id } = req.query;
+    const servingOrder = await orderServices.selectServingOrderOfTable(
+      tId,
+      owner_id,
+      restaurant_id
+    );
+    successResponse(res, servingOrder);
+  } catch (error) {
+    failResponse(res, error);
+  }
+};
 // Update payment status of order
 const updateOrderPaymentStatus = async (req, res) => {
   try {
@@ -61,4 +81,5 @@ module.exports = {
   getAllOrderInfor,
   deleteOrderInfor,
   updateOrderPaymentStatus,
+  getServingOrderOfTable,
 };
