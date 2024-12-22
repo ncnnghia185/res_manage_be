@@ -152,16 +152,19 @@ const validateMonthlyExpenses = (data) => {
 // Validate staff data
 const validateStaff = (data) => {
   const schema = Joi.object().keys({
+    id: Joi.string().required(),
     fullname: Joi.string().required(),
     gender: Joi.string().required(),
     date_of_birth: Joi.string().required(),
-    phonenumber: Joi.string().required(),
+    phone_number: Joi.string().required(),
     address: Joi.string(),
     identification_card: Joi.string(),
     hire_date: Joi.string().required(),
+    net_salary: Joi.string().required(),
+    staff_type: Joi.string().required(),
+    position: Joi.string().required(),
+    owner_id: Joi.number().required(),
     restaurant_id: Joi.number().required(),
-    net_salary: Joi.number().required(),
-    status_work: Joi.string(),
   });
   return validateData(schema, data);
 };

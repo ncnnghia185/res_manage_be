@@ -10,7 +10,7 @@ const updateQuery = (baseQuery, id, data, ownerId, restaurantId) => {
   if (Object.keys(data).length === 0) {
     throw new Error("Please provide data to update this");
   }
-  const conditon = parseInt(id);
+
   let query = baseQuery;
 
   let values = [];
@@ -30,7 +30,7 @@ const updateQuery = (baseQuery, id, data, ownerId, restaurantId) => {
   query += ` WHERE id = $${index} AND owner_id = ${ownerId} AND restaurant_id = ${restaurantId} RETURNING *`;
   // const values = Object.values(data);
 
-  values.push(conditon);
+  values.push(id);
 
   return {
     query,

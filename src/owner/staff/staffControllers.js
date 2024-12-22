@@ -15,7 +15,12 @@ const createNewStaff = async (req, res) => {
 const getOneStaffInfor = async (req, res) => {
   try {
     const { id } = req.params;
-    const staffInfor = await staffServices.selectOneStaff(id);
+    const { owner_id, restaurant_id } = req.query;
+    const staffInfor = await staffServices.selectOneStaff(
+      id,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, staffInfor);
   } catch (error) {
     failResponse(res, error);
@@ -25,7 +30,11 @@ const getOneStaffInfor = async (req, res) => {
 // Get all staffs infor
 const getAllStaffsInfor = async (req, res) => {
   try {
-    const allStaffs = await staffServices.selectAllStaffs();
+    const { owner_id, restaurant_id } = req.query;
+    const allStaffs = await staffServices.selectAllStaffs(
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, allStaffs);
   } catch (error) {
     failResponse(res, error);
@@ -36,7 +45,13 @@ const getAllStaffsInfor = async (req, res) => {
 const updateOneStaffInfor = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedStaff = await staffServices.updateOneStaff(id, req.body);
+    const { owner_id, restaurant_id } = req.query;
+    const updatedStaff = await staffServices.updateOneStaff(
+      id,
+      req.body,
+      owner_id,
+      restaurant_id
+    );
     successResponse(res, updatedStaff);
   } catch (error) {
     failResponse(res, error);
@@ -47,7 +62,8 @@ const updateOneStaffInfor = async (req, res) => {
 const delteOneStaffInfor = async (req, res) => {
   try {
     const { id } = req.params;
-    await staffServices.deleteOneStaff(id);
+    const { owner_id, restaurant_id } = req.query;
+    await staffServices.deleteOneStaff(id, owner_id, restaurant_id);
     successResponse(res);
   } catch (error) {
     failResponse(res, error);
