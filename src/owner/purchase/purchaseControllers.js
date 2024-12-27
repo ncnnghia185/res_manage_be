@@ -13,7 +13,7 @@ const createNewPurchase = async (req, res) => {
 
 // Get total purchase by day
 const getTotalPurchasesByDay = async (req, res) => {
-  const { date } = req.params;
+  const { date } = req.query;
   try {
     const totalByDay = await purchaseServices.selectTotalPricePurchasesByDate(
       date
@@ -27,9 +27,11 @@ const getTotalPurchasesByDay = async (req, res) => {
 // Get item purchased by day
 const getItemsPurchasedByDay = async (req, res) => {
   try {
-    const { date } = req.params;
+    const { date, owner_id, restaurant_id } = req.query;
     const itemsPurchased = await purchaseServices.selectItemsPurchasedByDay(
-      date
+      date,
+      owner_id,
+      restaurant_id
     );
     successResponse(res, itemsPurchased);
   } catch (error) {
@@ -65,8 +67,41 @@ const updateItemPurchasedByDay = async (req, res) => {
 const deleteItemPurchasedByDay = async (req, res) => {
   try {
     const { id } = req.params;
-    await purchaseServices.deleteItems(id);
+    const { owner_id, restaurant_id } = req.query;
+    await purchaseServices.deleteItems(id, owner_id, restaurant_id);
     successResponse(res);
+  } catch (error) {
+    failResponse(res, error);
+  }
+};
+
+// Get all purchases summary by month
+const getAllPurchasesSummaryByMonth = async (req, res) => {
+  try {
+    const { month, year, owner_id, restaurant_id } = req.query;
+    const purchasesSummary =
+      await purchaseServices.selectAllPurchaseSummaryByMonth(
+        month,
+        year,
+        owner_id,
+        restaurant_id
+      );
+    successResponse(res, purchasesSummary);
+  } catch (error) {
+    failResponse(res, error);
+  }
+};
+
+// Get purchase summary by date
+const getPurchaseSummaryByDate = async (req, res) => {
+  try {
+    const { date, owner_id, restaurant_id } = req.query;
+    const purchaseSummary = await purchaseServices.selectPurchaseSummaryByDate(
+      date,
+      owner_id,
+      restaurant_id
+    );
+    successResponse(res, purchaseSummary);
   } catch (error) {
     failResponse(res, error);
   }
@@ -77,5 +112,7 @@ module.exports = {
   getItemsPurchasedByDay,
   updateItemPurchasedByDay,
   deleteItemPurchasedByDay,
+  getAllPurchasesSummaryByMonth,
+  getPurchaseSummaryByDate,
   // calculateDailyPurchase,
 };

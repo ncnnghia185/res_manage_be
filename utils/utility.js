@@ -70,6 +70,10 @@ const sortResult = () => {};
 // PAGINATION
 const paginationData = () => {};
 
+// normalize name
+const normalizeIngredientName = (name) => {
+  return name.normalize("NFC").toLowerCase().trim();
+};
 module.exports = {
   applyFilter,
   sortResult,
@@ -78,4 +82,5 @@ module.exports = {
   comparePassword,
   formatDate,
   formatMonthSalary,
+  normalizeIngredientName,
 };
