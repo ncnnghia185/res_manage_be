@@ -9,6 +9,8 @@ const {
   calculateActualWorkHours,
 } = require("../../../../utils/calculateWorkTime");
 
+const { differenceInMinutes, parse } = require("date-fns");
+const { v4: uuidv4 } = require("uuid");
 const extractMonthYear = (dateStr) => {
   const [monthStr, yearStr] = dateStr.split("/");
   const month = parseInt(monthStr.replace("Tháng ", ""));
@@ -17,116 +19,167 @@ const extractMonthYear = (dateStr) => {
 };
 
 // INSERT BASIC STAFF PAYROLL AND TIMESHEET INFOR
-const insertBasicPayrollAndTimeSheet = async (staffId, data) => {
-  const value = validateStaffPayrollAndTimeSheet(data);
-  const staff_id = parseInt(staffId);
-  const id = parseInt(value.id);
-  const require_hours_work_perday = 10;
+const insertStartWorkTime = async (data, owner_id, restaurant_id) => {
+  const value = validateStaffPayrollAndTimeSheet(data.shift_work);
+  const workDate = new Date(value.work_date);
+  const month = workDate.getMonth() + 1;
+  const year = workDate.getFullYear();
 
-  let daily_salary = 270000;
-  let workdays = 1;
-  let notes = "";
-  // Check in time without checkout time
-  if (!value?.checkout) {
-    const checkinInfor = await client.query(
-      `INSERT INTO staff_timesheet_payroll(staff_id, work_date, checkin)
-      VALUES ($1, $2, $3) RETURNING work_date, checkin
-      `,
-      [staff_id, value.work_date, value.checkin]
-    );
-    return checkinInfor.rows[0];
-  }
-
-  // With check out time
-  // Calculate checkout - checkin time
-
-  let work_hours = calculateWorkTime(value.checkin, value.checkout);
-  const [actualWorkHours, actualWorkMinutes] = work_hours
-    .split(":")
-    .map(Number);
-
-  // Calculate actual work hours by minus 1h30 lunch break
-  const totalActualWorkHours =
-    actualWorkHours + actualWorkMinutes / 60 - (1 + 30 / 60);
-
-  // Actual work hours of the day
-
-  let actual_work_hours = 0;
-  if (totalActualWorkHours < 0) {
-    actual_work_hours = 0;
-  } else {
-    actual_work_hours = calculateActualWorkHours(totalActualWorkHours);
-  }
-
-  // Calculate workdays and daily salary by compare with require work hours per day
-  if (totalActualWorkHours >= require_hours_work_perday) {
-    workdays = 1;
-    daily_salary = 270000;
-    notes = "Đủ một ngày công";
-  } else {
-    workdays = totalActualWorkHours / require_hours_work_perday;
-    daily_salary = 270000 * workdays;
-    notes = "Không đủ một ngày công";
-  }
-
-  // Absent work day
-  if (value.checkin === "0:00" && value.checkout === "0:00") {
-    (workdays = 0),
-      (daily_salary = 0),
-      (notes = "Nghỉ làm"),
-      (actual_work_hours = 0);
-  }
-  const query_id = await client.query(
-    `SELECT id FROM staff_timesheet_payroll WHERE staff_id = $1 AND work_date = $2`,
-    [staffId, value.work_date]
+  await client.query("BEGIN");
+  const payrollCheck = await client.query(
+    `SELECT * FROM payrolls WHERE staff_id = $1 AND month_payroll = $2 AND year_payroll = $3 AND owner_id = $4 AND restaurant_id = $5`,
+    [value.staff_id, month, year, owner_id, restaurant_id]
   );
 
-  const checkin_id = query_id.rows[0]?.id;
+  if (payrollCheck.rows.length === 0) {
+    const totalWorkdays = parseFloat(0);
+    const uuid = uuidv4();
+    const payrollId = "PR-" + uuid.replace(/-/g, "").slice(0, 6).toUpperCase();
+    await client.query(
+      `INSERT INTO payrolls (id,staff_id, total_workdays, owner_id, restaurant_id, month_payroll, year_payroll)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        payrollId,
+        value.staff_id,
+        totalWorkdays,
+        owner_id,
+        restaurant_id,
+        month,
+        year,
+      ]
+    );
+  }
   const result = await client.query(
-    `UPDATE  staff_timesheet_payroll 
-    SET staff_id = $1, 
-        work_date = $2,
-        actual_work_hours = $3, 
-        notes = $4,
-        daily_salary = $5, 
-        checkin = $6,
-        checkout = $7, 
-        workdays = $8
-    WHERE id = $9 AND staff_id = $10 AND work_date = $11 RETURNING *`,
+    `INSERT INTO shifts_work(id, staff_id, work_date, start_time, owner_id, restaurant_id)
+     VALUES($1, $2, $3, $4, $5, $6)`,
     [
-      staff_id,
+      value.id,
+      value.staff_id,
       value.work_date,
-      actual_work_hours,
-      notes,
-      daily_salary,
-      value.checkin,
-      value.checkout,
-      workdays,
-      checkin_id,
-      staff_id,
-      value.work_date,
+      value.start_time,
+      owner_id,
+      restaurant_id,
     ]
   );
-  return result.rows[0];
+
+  await client.query(
+    `INSERT INTO staff_attendances(id, staff_id, shift_id, work_date, owner_id, restaurant_id, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7) `,
+    [
+      data.attendance.id,
+      value.staff_id,
+      value.id,
+      value.work_date,
+      owner_id,
+      restaurant_id,
+      data.attendance.notes || null,
+    ]
+  );
+  await client.query("COMMIT");
+  return true;
+};
+
+// UPDATE END TIME SHIFT WORK OF STAFF
+const updateEndWorkTime = async (
+  shift_id,
+  staff_id,
+  owner_id,
+  restaurant_id,
+  data
+) => {
+  // select start work time
+  const startTime = await client.query(
+    `SELECT * FROM shifts_work WHERE id = $1 AND staff_id = $2 AND owner_id = $3 AND restaurant_id = $4`,
+    [shift_id, staff_id, owner_id, restaurant_id]
+  );
+
+  const staff_start_time = startTime.rows[0].start_time;
+  const format = "HH:mm:ss";
+  const start = parse(staff_start_time, format, new Date());
+  const end = parse(data.shifts_work.end_time, format, new Date());
+
+  if (end < start) throw new Error("End time must be after start time");
+
+  const totalMinutes = differenceInMinutes(end, start);
+  const totalHours = totalMinutes / 60;
+  let workday = (totalHours / 10).toFixed(2);
+  workday = parseFloat(workday) > 1 ? 1 : parseFloat(workday);
+  await client.query("BEGIN");
+  await client.query(
+    `UPDATE shifts_work 
+    SET end_time = $1, total_hours_work = $2 
+    WHERE id = $3 AND staff_id = $4 AND owner_id = $5 AND restaurant_id = $6`,
+    [
+      data.shifts_work.end_time,
+      totalHours.toFixed(2),
+      shift_id,
+      staff_id,
+      owner_id,
+      restaurant_id,
+    ]
+  );
+
+  await client.query(
+    `UPDATE staff_attendances 
+    SET daily_status_work = $1, workday = $2, notes = $3
+    WHERE id = $4 AND staff_id = $5 AND owner_id = $6 AND restaurant_id = $7`,
+    [
+      data.attendance.daily_status_work,
+      workday,
+      data.attendance.notes || null,
+      shift_id,
+      staff_id,
+      owner_id,
+      restaurant_id,
+    ]
+  );
+
+  const staff_payroll = await client.query(
+    `SELECT total_workdays 
+    FROM payrolls 
+    WHERE staff_id = $1 AND owner_id = $2 AND restaurant_id = $3`,
+    [staff_id, owner_id, restaurant_id]
+  );
+  // const staff_total_workdays = staff_payroll.rows[0].total_workdays
+  let staff_total_workdays = 0;
+
+  staff_total_workdays = parseFloat(staff_payroll.rows[0].total_workdays);
+
+  const newTotalWorkdays = staff_total_workdays + parseFloat(workday);
+  await client.query(
+    `UPDATE payrolls 
+    SET total_workdays = $1, notes = $2 
+    WHERE staff_id = $3 AND owner_id = $4 AND restaurant_id = $5`,
+    [
+      newTotalWorkdays.toFixed(2),
+      data.attendance.notes || null,
+      staff_id,
+      owner_id,
+      restaurant_id,
+    ]
+  );
+  await client.query("COMMIT");
+  return true;
 };
 
 // SELECT ALL STAFF TIMESHEET INFOR WITH FILTER "month"
-const selectAllStaffTimesheets = async (staffId, date) => {
-  const staff_id = parseInt(staffId);
-  console.log("check date", date);
-  const { month, year } = extractMonthYear(date);
-  console.log("check month", month);
-  const result = await client.query(
-    `SELECT work_date, actual_work_hours, notes, checkin, checkout, workdays
-     FROM staff_timesheet_payroll 
-     WHERE staff_id = $1
-      AND EXTRACT(MONTH FROM TO_DATE(work_date, 'DD/MM/YYYY')) = $2
-      AND EXTRACT(YEAR FROM TO_DATE(work_date, 'DD/MM/YYYY')) = $3`,
-    [staff_id, month, year]
+const selectAllStaffsPayrollsByMonth = async (
+  month_payroll,
+  year_payroll,
+  owner_id,
+  restaurant_id
+) => {
+  const result_payrolls = await client.query(
+    `SELECT id, staff_id, total_workdays, notes FROM payrolls 
+    WHERE month_payroll = $1 AND year_payroll = $2 AND owner_id = $3 AND restaurant_id = $4`,
+    [month_payroll, year_payroll, owner_id, restaurant_id]
   );
-  return result.rows;
+
+  return result_payrolls.rows;
 };
+
 module.exports = {
-  insertBasicPayrollAndTimeSheet,
-  selectAllStaffTimesheets,
+  insertStartWorkTime,
+  updateEndWorkTime,
+  selectAllStaffsPayrollsByMonth,
 };
