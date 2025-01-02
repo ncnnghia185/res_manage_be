@@ -21,11 +21,21 @@ router.delete(
   staffControllers.delteOneStaffInfor
 );
 
-// Timesheet and Payroll for specific staff
-router.post("/daily-work/:sId", timesheetPaymentControllers.createNewDailyWork);
+// Timesheet and Payrolls routes
+router.post(
+  "/start-daily-work",
+  verifyAccessToken,
+  timesheetPaymentControllers.createNewDailyWork
+);
+router.post(
+  "/end-daily-work",
+  verifyAccessToken,
+  timesheetPaymentControllers.createStaffEndWorkTime
+);
 router.get(
-  "/time-sheet/:sId",
-  timesheetPaymentControllers.getAllStaffTimesheet
+  "/month-payrolls/:mPR/:yPR",
+  verifyAccessToken,
+  timesheetPaymentControllers.getAllStaffPayrollsByMonth
 );
 
 // Salary by month of staff

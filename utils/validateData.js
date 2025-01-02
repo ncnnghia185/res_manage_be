@@ -172,18 +172,10 @@ const validateStaff = (data) => {
 // Validate staff payroll and timesheet data
 const validateStaffPayrollAndTimeSheet = (data) => {
   const schema = Joi.object().keys({
-    total_salary: Joi.number(),
-    daily_salary: Joi.number(),
-    checkin: Joi.string().required(),
-    checkout: Joi.string(),
+    id: Joi.string().required(),
+    staff_id: Joi.string().required(),
     work_date: Joi.string().required(),
-    work_hours: Joi.string(),
-    bonus: Joi.number(),
-    tax: Joi.number(),
-    insurance: Joi.number(),
-    other_deductions: Joi.number(),
-    workdays: Joi.number(),
-    notes: Joi.string(),
+    start_time: Joi.string().required(),
   });
   return validateData(schema, data);
 };
