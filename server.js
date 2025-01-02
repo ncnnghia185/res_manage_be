@@ -21,6 +21,10 @@ const PORT = process.env.PORT || 9999;
 //     methods: ["GET", "POST", "PUT", "DELETE"],
 //   })
 // );
+
+app.get("/hello", (req, res) => {
+  res.send("Hello World!");
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 initWebroute(app);
